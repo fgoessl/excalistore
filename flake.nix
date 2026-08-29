@@ -30,7 +30,7 @@
             postgresql_16
 
             # frontend (frontend/)
-            nodejs_20
+            nodejs
           ];
 
           shellHook = ''
