@@ -33,5 +33,34 @@ impl IntoResponse for AppError{
             }
         };
         (status, Json(json!({"error": message}))).into_response()
-    }   
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn not_found_maps_to_404() {
+        let response = AppError::NotFound.into_response();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn conflict_maps_to_409() {
+        let response = AppError::Conflict.into_response();
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+    }
+
+    #[test]
+    fn database_error_maps_to_500() {
+        let response = AppError::Database(sqlx::Error::RowNotFound).into_response();
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[test]
+    fn row_not_found_converts_to_not_found_variant() {
+        let err: AppError = sqlx::Error::RowNotFound.into();
+        assert!(matches!(err, AppError::NotFound));
+    }
 }
