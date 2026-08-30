@@ -18,7 +18,7 @@ async fn main() {
         .await
         .expect("Migration must succeed");
     tracing::info!("database migrations up to date");
-    let app = excalistore_api::build_router(AppState{pool});
+    let app = excalistore_api::build_router(AppState { pool });
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 3000));
     tracing::info!("listening on {addr}");

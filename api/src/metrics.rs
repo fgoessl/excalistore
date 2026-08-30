@@ -38,6 +38,12 @@ fn register_known_metrics() {
         let label: &'static str = kind.into();
         metrics::counter!("excalistore_errors_total", "kind" => label).absolute(0);
     }
+
+    metrics::describe_counter!(
+        "excalistore_drawings_created_total",
+        "Count of drawings successfully created"
+    );
+    metrics::counter!("excalistore_drawings_created_total").absolute(0);
 }
 
 /// Eagerly installs the recorder and registers every known metric. Must be

@@ -34,4 +34,6 @@ async fn metrics_endpoint_exposes_known_counters_at_zero() {
     assert!(body.contains(r#"excalistore_errors_total{kind="not_found"} 0"#));
     assert!(body.contains(r#"excalistore_errors_total{kind="conflict"} 0"#));
     assert!(body.contains(r#"excalistore_errors_total{kind="database"} 0"#));
+    // pre-registered at 0 too — true even though nothing has been created yet
+    assert!(body.contains("excalistore_drawings_created_total 0"));
 }

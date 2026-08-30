@@ -1,32 +1,27 @@
-use axum::{Json, http::StatusCode, response::IntoResponse};
+use axum::{http::StatusCode, response::IntoResponse, Json};
 use serde_json::json;
 use strum::{EnumDiscriminants, EnumIter, IntoStaticStr};
-
 
 #[derive(Debug, EnumDiscriminants)]
 #[strum_discriminants(name(AppErrorKind))]
 #[strum_discriminants(derive(EnumIter, IntoStaticStr))]
 #[strum_discriminants(strum(serialize_all = "snake_case"))]
-pub enum AppError{
+pub enum AppError {
     NotFound,
     Conflict,
-    Database(sqlx::Error)
+    Database(sqlx::Error),
 }
 
-
-impl From <sqlx::Error> for AppError{
-
-    fn from(err: sqlx::Error) -> AppError{
-        match err{
+impl From<sqlx::Error> for AppError {
+    fn from(err: sqlx::Error) -> AppError {
+        match err {
             sqlx::Error::RowNotFound => AppError::NotFound,
             _ => AppError::Database(err),
         }
-
     }
-
 }
 
-impl IntoResponse for AppError{
+impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         // Same AppErrorKind -> &'static str conversion metrics.rs uses to
         // pre-register these labels at 0, so the labels here can never
