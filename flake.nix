@@ -31,6 +31,10 @@
 
             # frontend (frontend/)
             nodejs
+
+            # dev tooling
+            lazydocker
+            harlequin
           ];
 
           shellHook = ''
