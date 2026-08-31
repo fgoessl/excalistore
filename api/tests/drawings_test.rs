@@ -168,3 +168,118 @@ async fn get_drawing_returns_404_for_unknown_id() {
 
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn update_drawing_succeeds_with_matching_version() {
+    let pool = test_pool().await;
+    let app = excalistore_api::build_router(AppState { pool });
+
+    let create = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/drawings")
+                .header("content-type", "application/json")
+                .body(Body::from(json!({ "title": "Editable" }).to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let created = body_json(create).await;
+    let id = created["id"].as_str().unwrap();
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("PUT")
+                .uri(format!("/api/drawings/{id}"))
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    json!({
+                        "title": "Edited",
+                        "scene": { "elements": [{"id": "a"}], "appState": {}, "files": {} },
+                        "version": 1
+                    })
+                    .to_string(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = body_json(response).await;
+    assert_eq!(body["title"], "Edited");
+    assert_eq!(body["version"], 2);
+}
+
+#[tokio::test]
+async fn update_drawing_returns_409_on_stale_version() {
+    let pool = test_pool().await;
+    let app = excalistore_api::build_router(AppState { pool });
+
+    let create = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/drawings")
+                .header("content-type", "application/json")
+                .body(Body::from(json!({ "title": "Stale" }).to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let created = body_json(create).await;
+    let id = created["id"].as_str().unwrap();
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("PUT")
+                .uri(format!("/api/drawings/{id}"))
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    json!({
+                        "title": "Edited",
+                        "scene": { "elements": [], "appState": {}, "files": {} },
+                        "version": 99
+                    })
+                    .to_string(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::CONFLICT);
+}
+
+#[tokio::test]
+async fn update_drawing_returns_404_for_unknown_id() {
+    let pool = test_pool().await;
+    let app = excalistore_api::build_router(AppState { pool });
+    let unknown_id = uuid::Uuid::new_v4();
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("PUT")
+                .uri(format!("/api/drawings/{unknown_id}"))
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    json!({
+                        "title": "Ghost",
+                        "scene": { "elements": [], "appState": {}, "files": {} },
+                        "version": 1
+                    })
+                    .to_string(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}

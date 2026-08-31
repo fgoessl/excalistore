@@ -35,6 +35,7 @@
             # dev tooling
             lazydocker
             harlequin
+            nushell
           ];
 
           shellHook = ''
