@@ -20,5 +20,9 @@ export function NewDrawingPage() {
       });
   }, [navigate]);
 
-  return <p>Creating drawing…</p>;
+  return (
+    <div className="page">
+      <p className="empty-state">Creating drawing…</p>
+    </div>
+  );
 }

@@ -10,5 +10,9 @@ const LABELS: Record<SaveStatusValue, string> = {
 export function SaveStatus({ status }: { status: SaveStatusValue }) {
   const label = LABELS[status];
   if (!label) return null;
-  return <span role="status">{label}</span>;
+  return (
+    <span role="status" className="save-status" data-status={status}>
+      {label}
+    </span>
+  );
 }

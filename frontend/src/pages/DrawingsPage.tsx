@@ -26,13 +26,19 @@ export function DrawingsPage() {
   }
 
   if (loading) {
-    return <p>Loading…</p>;
+    return (
+      <div className="page">
+        <p className="empty-state">Loading…</p>
+      </div>
+    );
   }
 
   return (
-    <div>
+    <div className="page">
       <h1>Drawings</h1>
-      <button onClick={() => navigate("/drawings/new")}>New drawing</button>
+      <button className="btn btn-primary" onClick={() => navigate("/drawings/new")}>
+        New drawing
+      </button>
       <DrawingList
         drawings={drawings}
         onOpen={(id) => navigate(`/drawings/${id}`)}
