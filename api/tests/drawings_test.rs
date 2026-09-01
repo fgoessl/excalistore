@@ -82,9 +82,7 @@ async fn list_drawings_includes_a_created_drawing() {
                 .method("POST")
                 .uri("/api/drawings")
                 .header("content-type", "application/json")
-                .body(Body::from(
-                    json!({ "title": "Listed Drawing" }).to_string(),
-                ))
+                .body(Body::from(json!({ "title": "Listed Drawing" }).to_string()))
                 .unwrap(),
         )
         .await
@@ -276,6 +274,74 @@ async fn update_drawing_returns_404_for_unknown_id() {
                     })
                     .to_string(),
                 ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn delete_drawing_returns_204_and_removes_it() {
+    let pool = test_pool().await;
+    let app = excalistore_api::build_router(AppState { pool });
+
+    let create = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/drawings")
+                .header("content-type", "application/json")
+                .body(Body::from(json!({ "title": "Delete Me" }).to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let created = body_json(create).await;
+    let id = created["id"].as_str().unwrap();
+
+    let delete_response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("DELETE")
+                .uri(format!("/api/drawings/{id}"))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(delete_response.status(), StatusCode::NO_CONTENT);
+
+    // confirm it's actually gone, not just a 204 with no effect
+    let get_response = app
+        .oneshot(
+            Request::builder()
+                .uri(format!("/api/drawings/{id}"))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(get_response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn delete_drawing_returns_404_for_unknown_id() {
+    let pool = test_pool().await;
+    let app = excalistore_api::build_router(AppState { pool });
+    let unknown_id = uuid::Uuid::new_v4();
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("DELETE")
+                .uri(format!("/api/drawings/{unknown_id}"))
+                .body(Body::empty())
                 .unwrap(),
         )
         .await

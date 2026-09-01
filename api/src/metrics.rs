@@ -62,6 +62,12 @@ fn register_known_metrics() {
     // just be a duplicate label to keep in sync.
 
     metrics::describe_counter!(
+        "excalistore_drawings_deleted_total",
+        "Count of drawings successfully deleted"
+    );
+    metrics::counter!("excalistore_drawings_deleted_total").absolute(0);
+
+    metrics::describe_counter!(
         "excalistore_http_requests_total",
         "Count of HTTP requests handled, labeled by method, route, and status code"
     );

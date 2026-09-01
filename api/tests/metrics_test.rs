@@ -37,6 +37,7 @@ async fn metrics_endpoint_exposes_known_counters_at_zero() {
     // pre-registered at 0 too — true even though nothing has been created yet
     assert!(body.contains("excalistore_drawings_created_total 0"));
     assert!(body.contains("excalistore_drawings_updated_total 0"));
+    assert!(body.contains("excalistore_drawings_deleted_total 0"));
 }
 
 #[tokio::test]
@@ -92,5 +93,8 @@ async fn http_requests_total_counts_by_route_method_and_status() {
         .expect("counter line must have a value")
         .parse()
         .expect("counter value must be a number");
-    assert!(value >= 1.0, "expected the request counter to have been incremented, got {value}");
+    assert!(
+        value >= 1.0,
+        "expected the request counter to have been incremented, got {value}"
+    );
 }
