@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { useParams } from "react-router-dom";
 import { Excalidraw } from "@excalidraw/excalidraw";
@@ -6,6 +6,7 @@ import { getDrawing, updateDrawing } from "../api/api";
 import { useAutosave } from "../hooks/useAutosave";
 import { SaveStatus } from "../components/SaveStatus";
 import { logger } from "../lib/logger";
+import { sceneSignature } from "../lib/sceneSignature";
 import type { Drawing, DrawingScene } from "../types";
 
 // The persisted scene is deliberately opaque JSON on the wire (spec §4/§5 —
@@ -30,12 +31,22 @@ export function EditorPage() {
   // that cycle.
   const [initialData, setInitialData] = useState<ExcalidrawInitialData | null>(null);
   const [pendingScene, setPendingScene] = useState<DrawingScene | null>(null);
+  // Signature of the last scene Excalidraw reported that we accepted for
+  // saving. Excalidraw's onChange also fires for selection/tool/scroll
+  // changes and once on mount; comparing against this keeps those from
+  // triggering a save (and a version bump) when nothing about the drawing
+  // itself changed. `null` until that first on-mount report, which becomes the
+  // baseline — deliberately NOT derived from the raw loaded scene, because a
+  // fresh drawing's stored appState is `{}` while Excalidraw reports its
+  // defaults (theme, background) right away, which would look like an edit.
+  const lastSignature = useRef<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
     getDrawing(id)
       .then((loaded) => {
         setDrawing(loaded);
+        lastSignature.current = null;
         setInitialData({
           elements: loaded.scene.elements,
           appState: {
@@ -71,7 +82,17 @@ export function EditorPage() {
       // structurally assignable to `DrawingScene.appState`'s
       // `Record<string, unknown>` — cast through `unknown` rather than
       // widening DrawingScene.
-      setPendingScene({ elements, appState: appState as unknown as Record<string, unknown>, files });
+      const scene: DrawingScene = {
+        elements,
+        appState: appState as unknown as Record<string, unknown>,
+        files,
+      };
+      const signature = sceneSignature(scene);
+      const isBaseline = lastSignature.current === null;
+      const unchanged = signature === lastSignature.current;
+      lastSignature.current = signature;
+      if (isBaseline || unchanged) return;
+      setPendingScene(scene);
     },
     []
   );
