@@ -8,6 +8,7 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<DrawingsPage />} />
+        <Route path="/new" element={<NewDrawingPage />} />
         <Route path="/drawings/new" element={<NewDrawingPage />} />
         <Route path="/drawings/:id" element={<EditorPage />} />
       </Routes>
