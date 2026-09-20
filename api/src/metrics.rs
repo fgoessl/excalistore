@@ -119,7 +119,7 @@ pub async fn metrics_handler() -> String {
 /// there's no bounded set of "route" label values to worry about for
 /// requests to routes that don't exist.
 ///
-/// `MatchedPath` gives us the *route template* (e.g. `/api/drawings/:id`),
+/// `MatchedPath` gives us the *route template* (e.g. `/api/drawings/{id}`),
 /// not the concrete request URI (e.g. `/api/drawings/<uuid>`) — using the
 /// concrete URI as a label would mean a brand new metric series for every
 /// distinct id ever requested, growing forever.

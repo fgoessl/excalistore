@@ -23,7 +23,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/metrics", get(metrics::metrics_handler))
         .route("/api/drawings", get(list_drawings).post(create_drawing))
         .route(
-            "/api/drawings/:id",
+            "/api/drawings/{id}",
             get(fetch_drawing).put(update_drawing).delete(delete_drawing),
         )
         .route_layer(middleware::from_fn(metrics::track_metrics))

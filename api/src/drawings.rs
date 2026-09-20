@@ -46,7 +46,7 @@ pub async fn list_drawings(State(state): State<AppState>) -> Result<Json<Vec<Dra
     Ok(Json(drawings))
 }
 
-/// `GET /api/drawings/:id` — fetch one drawing. 404 if it doesn't exist.
+/// `GET /api/drawings/{id}` — fetch one drawing. 404 if it doesn't exist.
 pub async fn fetch_drawing(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
@@ -86,7 +86,7 @@ pub async fn create_drawing(
     Ok((StatusCode::CREATED, Json(drawing)))
 }
 
-/// `DELETE /api/drawings/:id` — delete a drawing. 404 if it doesn't exist.
+/// `DELETE /api/drawings/{id}` — delete a drawing. 404 if it doesn't exist.
 pub async fn delete_drawing(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
@@ -105,7 +105,7 @@ pub async fn delete_drawing(
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// `PUT /api/drawings/:id` — optimistic-versioned update. 200 with the
+/// `PUT /api/drawings/{id}` — optimistic-versioned update. 200 with the
 /// updated row on a matching `version`, 409 if it's stale, 404 if the
 /// drawing doesn't exist at all.
 pub async fn update_drawing(

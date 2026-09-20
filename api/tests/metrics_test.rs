@@ -52,7 +52,7 @@ async fn http_requests_total_counts_by_route_method_and_status() {
     let app = excalistore_api::build_router(AppState { pool });
 
     // A request to a route with a path parameter should be labeled by its
-    // route *template* (`/api/drawings/:id`), not the concrete id in the
+    // route *template* (`/api/drawings/{id}`), not the concrete id in the
     // URI — otherwise every distinct id would create its own metric series.
     let unknown_id = uuid::Uuid::new_v4();
     let _ = app
@@ -82,7 +82,7 @@ async fn http_requests_total_counts_by_route_method_and_status() {
         .lines()
         .find(|line| {
             line.starts_with(
-                r#"excalistore_http_requests_total{method="GET",route="/api/drawings/:id",status="404"}"#,
+                r#"excalistore_http_requests_total{method="GET",route="/api/drawings/{id}",status="404"}"#,
             )
         })
         .expect("route-templated request counter line must be present in /metrics output");
