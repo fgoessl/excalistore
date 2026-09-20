@@ -35,10 +35,29 @@ export function DrawingsPage() {
 
   return (
     <div className="page">
-      <h1>Drawings</h1>
-      <button className="btn btn-primary" onClick={() => navigate("/drawings/new")}>
-        New drawing
-      </button>
+      <header className="page-header">
+        <div>
+          <h1>Drawings</h1>
+          <p className="page-subtitle">
+            {drawings.length === 1 ? "1 drawing" : `${drawings.length} drawings`} stored
+          </p>
+        </div>
+        <button className="btn btn-primary" onClick={() => navigate("/drawings/new")}>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          New drawing
+        </button>
+      </header>
       <DrawingList
         drawings={drawings}
         onOpen={(id) => navigate(`/drawings/${id}`)}

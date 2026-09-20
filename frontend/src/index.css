@@ -7,18 +7,22 @@
  */
 
 :root {
-  --bg: #f7f7f8;
-  --surface: #ffffff;
-  --border: #e3e3e8;
-  --text: #1c1c1f;
-  --text-muted: #6b6b76;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --danger: #b91c1c;
-  --danger-bg: #fef2f2;
-  --danger-bg-hover: #fee2e2;
-  --radius: 10px;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 8px rgba(0, 0, 0, 0.04);
+  color-scheme: dark;
+  --bg: #121212;
+  --surface: #232329;
+  --surface-hover: #2e2d39;
+  --border: #3a3a44;
+  --text: #e9e9ee;
+  --text-muted: #9a9aa8;
+  --accent: #7c74ff;
+  --accent-hover: #918bff;
+  --accent-soft: rgba(124, 116, 255, 0.14);
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.1);
+  --danger-bg-hover: rgba(248, 113, 113, 0.22);
+  --success: #4ade80;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 * {
@@ -29,9 +33,66 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  -webkit-font-smoothing: antialiased;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif;
+}
+
+/* Decorative side gutters: a bright, softly glowing, staggered tile of a tiny motif of hand-picked shapes (diamond, ellipse, rounded square — copied from a saved drawing), faded
+   out behind the centered content column (720px wide, plus a 40px feathered
+   edge) so they only show to its left and right. Fixed + non-interactive, so
+   it never affects layout or clicks; on the editor page Excalidraw's own
+   full-viewport canvas simply covers it. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='112' height='84' viewBox='0 0 112 84' fill='none' stroke='rgb(255,255,255)' stroke-width='5.5' stroke-linecap='round' stroke-linejoin='round' shape-rendering='geometricPrecision'%3E%3Cdefs%3E%3Cfilter id='g' filterUnits='userSpaceOnUse' x='0' y='0' width='112' height='84'%3E%3CfeGaussianBlur in='SourceAlpha' stdDeviation='0.7' result='b'/%3E%3CfeFlood flood-color='rgb(150,195,255)' flood-opacity='.75' result='c'/%3E%3CfeComposite in='c' in2='b' operator='in' result='halo'/%3E%3CfeMerge%3E%3CfeMergeNode in='halo'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23g)'%3E%3Cg transform='translate(4 38) scale(0.2) translate(-712.4 -107)'%3E%3Cpath d='M905.7 112.7Q911.35 107 917.0 112.7L934.2 130.0Q939.8 135.7 934.2 141.4L917.0 158.7Q911.35 164.4 905.7 158.7L888.5 141.4Q882.9 135.7 888.5 130.0Z'/%3E%3Cellipse cx='825.15' cy='208.65' rx='22.85' ry='20.65'/%3E%3Crect x='712.4' y='260.2' width='41.6' height='45' rx='10.5'/%3E%3C/g%3E%3Cg transform='translate(58 4) scale(0.2) translate(-712.4 -107)'%3E%3Cpath d='M905.7 112.7Q911.35 107 917.0 112.7L934.2 130.0Q939.8 135.7 934.2 141.4L917.0 158.7Q911.35 164.4 905.7 158.7L888.5 141.4Q882.9 135.7 888.5 130.0Z'/%3E%3Cellipse cx='825.15' cy='208.65' rx='22.85' ry='20.65'/%3E%3Crect x='712.4' y='260.2' width='41.6' height='45' rx='10.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 112px 84px;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(50% - 400px),
+    transparent calc(50% - 360px),
+    transparent calc(50% + 360px),
+    #000 calc(50% + 400px)
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(50% - 400px),
+    transparent calc(50% - 360px),
+    transparent calc(50% + 360px),
+    #000 calc(50% + 400px)
+  );
+}
+
+/* Accent-purple highlights (same colour as the "New drawing" button): a sparse overlay tile spanning 7x2 cells of the base pattern
+   (84 shapes) that redraws every 28th shape in accent purple, exactly on top of the
+   white one, so no motif changes shape. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='784' height='168' viewBox='0 0 784 168' fill='none' stroke='rgb(124,116,255)' stroke-width='6.5' stroke-linecap='round' stroke-linejoin='round' shape-rendering='geometricPrecision'%3E%3Cdefs%3E%3Cfilter id='o' filterUnits='userSpaceOnUse' x='0' y='0' width='784' height='168'%3E%3CfeGaussianBlur in='SourceAlpha' stdDeviation='0.7' result='b'/%3E%3CfeFlood flood-color='rgb(124,116,255)' flood-opacity='.85' result='c'/%3E%3CfeComposite in='c' in2='b' operator='in' result='halo'/%3E%3CfeMerge%3E%3CfeMergeNode in='halo'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg filter='url(%23o)'%3E%3Cg transform='translate(506 4) scale(0.2) translate(-712.4 -107)'%3E%3Cpath d='M905.7 112.7Q911.35 107 917.0 112.7L934.2 130.0Q939.8 135.7 934.2 141.4L917.0 158.7Q911.35 164.4 905.7 158.7L888.5 141.4Q882.9 135.7 888.5 130.0Z'/%3E%3C/g%3E%3Cg transform='translate(228 122) scale(0.2) translate(-712.4 -107)'%3E%3Cellipse cx='825.15' cy='208.65' rx='22.85' ry='20.65'/%3E%3C/g%3E%3Cg transform='translate(730 88) scale(0.2) translate(-712.4 -107)'%3E%3Crect x='712.4' y='260.2' width='41.6' height='45' rx='10.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-size: 784px 168px;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(50% - 400px),
+    transparent calc(50% - 360px),
+    transparent calc(50% + 360px),
+    #000 calc(50% + 400px)
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(50% - 400px),
+    transparent calc(50% - 360px),
+    transparent calc(50% + 360px),
+    #000 calc(50% + 400px)
+  );
 }
 
 button {
@@ -46,9 +107,25 @@ button {
   padding: 2.5rem 1.5rem;
 }
 
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
 .page h1 {
-  font-size: 1.5rem;
-  margin: 0 0 1.25rem;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.page-subtitle {
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 /* Buttons */
@@ -64,14 +141,19 @@ button {
 }
 
 .btn:hover {
-  background: var(--bg);
+  background: var(--surface-hover);
 }
 
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
-  margin-bottom: 1.5rem;
+  color: #0f1014;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  box-shadow: 0 4px 14px rgba(124, 116, 255, 0.35);
 }
 
 .btn-primary:hover {
@@ -112,6 +194,14 @@ button {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 0.4rem 0.4rem 0.4rem 1rem;
+  transition: border-color 0.12s ease, background-color 0.12s ease,
+    transform 0.12s ease;
+}
+
+.drawing-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+  transform: translateY(-1px);
 }
 
 .drawing-card__title {
@@ -131,7 +221,11 @@ button {
 
 .drawing-card__icon {
   flex-shrink: 0;
-  color: var(--text-muted);
+  box-sizing: content-box;
+  padding: 0.4rem;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .drawing-card__title-text {
@@ -141,8 +235,11 @@ button {
 }
 
 .drawing-card__title:hover .drawing-card__title-text {
+  color: var(--accent-hover);
+}
+
+.drawing-card__title:hover .drawing-card__icon {
   color: var(--accent);
-  text-decoration: underline;
 }
 
 .drawing-card__meta {
@@ -196,7 +293,7 @@ button {
 }
 
 .save-status[data-status="saved"] {
-  color: #15803d;
+  color: var(--success);
 }
 
 .save-status[data-status="saving"] {
