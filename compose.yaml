@@ -9,6 +9,27 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U excalistore -d excalistore"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  # The whole app (API + built frontend) as one container, built from the
+  # Dockerfile in this repo. Not needed for local development; for that,
+  # start only Postgres: `docker compose up -d postgres`.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://excalistore:password@postgres:5432/excalistore
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    restart: unless-stopped
 
 volumes:
   pgdata:

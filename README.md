@@ -6,95 +6,144 @@ Rust (Axum) backend, React frontend, PostgreSQL storage.
 
 ## Run it
 
-You need Docker, Rust, and Node. From the repo root:
+All you need is Docker. From the repo root:
 
 ```bash
-# 1. Postgres
+docker compose up --build
+```
+
+Then open <http://localhost:3000>, click **New drawing**, and draw. It saves
+about a second and a half after you stop, and the corner badge tells you how
+it went.
+
+This builds the app from this repo's `Dockerfile` (one container that serves
+both the frontend and the API) and starts it next to Postgres. Your drawings
+live in the `pgdata` volume, so they survive restarts.
+
+Stop it:
+
+```bash
+docker compose down
+```
+
+(Add `-v` only if you want to delete the data too.)
+
+Port 3000 busy? Pick another:
+
+```bash
+APP_PORT=3001 docker compose up --build
+```
+
+## Develop it
+
+You need Docker, Rust, and Node. Compose runs just Postgres; you run the app
+from source for fast rebuilds and hot reload. Each command below is meant to be
+run on its own.
+
+Start Postgres only:
+
+```bash
 docker compose up -d postgres
-
-# 2. Backend on :3000 (creates the table on first start)
-export DATABASE_URL=postgres://excalistore:password@localhost:5432/excalistore
-(cd api && cargo run)
 ```
 
-In a second terminal:
+Start the backend on :3000 (it creates the table on first start):
 
 ```bash
-# 3. Frontend on :5173, proxying /api to the backend
-cd frontend && npm install && npm run dev
+(cd api && DATABASE_URL=postgres://excalistore:password@localhost:5432/excalistore cargo run)
 ```
 
-Open <http://localhost:5173>, click **New drawing**, and draw. It saves about
-a second and a half after you stop, and the corner badge tells you how it went.
+Install the frontend's dependencies:
+
+```bash
+npm --prefix frontend install
+```
+
+Start the frontend on :5173 (it proxies `/api` to the backend):
+
+```bash
+npm --prefix frontend run dev
+```
+
+Then open <http://localhost:5173>. In this mode port 3000 only serves the API;
+the built frontend is only served by the container.
 
 > The backend reads `DATABASE_URL` from the environment. It does not load a
-> `.env` file, so `export` it. If you prefer a file, copy `.env.example` to
-> `.env` and run `set -a; source .env; set +a` before `cargo run`.
+> `.env` file, which is why it is set inline in the command above.
 
 ## Try the API
 
+Each request below runs on its own. Replace `<id>` with an id from the create
+or list response.
+
+Create a drawing:
+
 ```bash
-# create a drawing
-curl -s -X POST localhost:3000/api/drawings \
-  -H 'content-type: application/json' \
-  -d '{"title":"My Drawing"}'
+curl -s -X POST localhost:3000/api/drawings -H 'content-type: application/json' -d '{"title":"My Drawing"}'
+```
 
-# list drawings
+List drawings:
+
+```bash
 curl -s localhost:3000/api/drawings
+```
 
-# fetch one (swap in a real id)
+Fetch one:
+
+```bash
 curl -s localhost:3000/api/drawings/<id>
+```
 
-# update it: send the version you loaded, or you get a 409
-curl -s -X PUT localhost:3000/api/drawings/<id> \
-  -H 'content-type: application/json' \
-  -d '{"title":"My Drawing","scene":{"elements":[],"appState":{},"files":{}},"version":1}'
+Update it. Send the version you loaded, or you get a 409:
 
-# delete it
+```bash
+curl -s -X PUT localhost:3000/api/drawings/<id> -H 'content-type: application/json' -d '{"title":"My Drawing","scene":{"elements":[],"appState":{},"files":{}},"version":1}'
+```
+
+Delete it:
+
+```bash
 curl -s -X DELETE localhost:3000/api/drawings/<id>
+```
 
-# health and Prometheus metrics
+Check health:
+
+```bash
 curl -s localhost:3000/health
+```
+
+Read the Prometheus metrics:
+
+```bash
 curl -s localhost:3000/metrics
 ```
 
 ## Run the tests
 
-```bash
-# backend (needs Postgres from step 1)
-cd api && DATABASE_URL=postgres://excalistore:password@localhost:5432/excalistore cargo test
+The backend tests need Postgres running (see "Develop it").
 
-# frontend
-cd frontend && npm test
+Backend:
+
+```bash
+(cd api && DATABASE_URL=postgres://excalistore:password@localhost:5432/excalistore cargo test)
+```
+
+Frontend:
+
+```bash
+npm --prefix frontend test
 ```
 
 The backend tests use the same database as the dev app, so they leave extra
 drawings behind.
 
-## Run it as one container
+## Changing the backend's SQL
 
-The production image serves the built frontend and the API together on port
-3000. Postgres runs separately; it is not in the image.
-
-```bash
-docker build -t excalistore:v0.1 .
-
-docker network create excalistore-net
-docker run -d --name pg --network excalistore-net \
-  -e POSTGRES_USER=excalistore -e POSTGRES_PASSWORD=password -e POSTGRES_DB=excalistore \
-  postgres:16
-docker run -d --name excalistore --network excalistore-net -p 3000:3000 \
-  -e DATABASE_URL=postgres://excalistore:password@pg:5432/excalistore \
-  excalistore:v0.1
-```
-
-Then open <http://localhost:3000>.
-
-If you change a SQL query in the backend, regenerate the offline query cache
-that the image build relies on, and commit it:
+The image build has no database to check queries against, so it relies on an
+offline query cache in `api/.sqlx/`. If you change a SQL query, regenerate it
+and commit the result:
 
 ```bash
-cd api && DATABASE_URL=postgres://excalistore:password@localhost:5432/excalistore cargo sqlx prepare
+(cd api && DATABASE_URL=postgres://excalistore:password@localhost:5432/excalistore cargo sqlx prepare)
 ```
 
 ## Keep it off the public internet
