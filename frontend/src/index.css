@@ -278,18 +278,77 @@ button {
   font-size: 0.95rem;
 }
 
-/* Save status badge (EditorPage) */
+/* Editor toolbar — sits above the Excalidraw canvas (EditorPage), in normal
+   document flow rather than overlaid, so it never competes with Excalidraw's
+   own top toolbar for space or z-index. */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-toolbar-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border-radius: var(--radius);
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+
+.editor-toolbar-back:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.editor-toolbar-spacer {
+  flex: 1;
+}
+
+.editable-title,
+.editable-title-input {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.editable-title {
+  cursor: text;
+  border-radius: var(--radius);
+  padding: 0.2rem 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editable-title:hover {
+  background: var(--surface-hover);
+}
+
+.editable-title-input {
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 0.2rem 0.5rem;
+  min-width: 10rem;
+}
+
+/* Save status badge (EditorPage) — now laid out inline in .editor-toolbar
+   rather than a fixed overlay. */
 .save-status {
-  position: fixed;
-  top: 0.75rem;
-  left: 0.75rem;
-  z-index: 10;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0.3rem 0.8rem;
   font-size: 0.8rem;
-  box-shadow: var(--shadow);
+  white-space: nowrap;
 }
 
 .save-status[data-status="saved"] {

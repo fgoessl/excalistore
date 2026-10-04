@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { getDrawing, updateDrawing } from "../api/api";
 import { useAutosave } from "../hooks/useAutosave";
-import { SaveStatus } from "../components/SaveStatus";
+import { EditorToolbar } from "../components/EditorToolbar";
 import { logger } from "../lib/logger";
 import { sceneSignature } from "../lib/sceneSignature";
 import type { Drawing, DrawingScene } from "../types";
@@ -30,7 +30,23 @@ export function EditorPage() {
   // "Maximum update depth exceeded" loop. A stable reference here breaks
   // that cycle.
   const [initialData, setInitialData] = useState<ExcalidrawInitialData | null>(null);
-  const [pendingScene, setPendingScene] = useState<DrawingScene | null>(null);
+  const [title, setTitle] = useState("");
+  // What a save should send alongside the scene — kept in a ref rather than
+  // read fresh from `title` state inside `handleChange` below, so that
+  // callback can stay referentially stable (see its own comment).
+  const titleRef = useRef(title);
+  useEffect(() => {
+    titleRef.current = title;
+  }, [title]);
+  // Always the latest scene Excalidraw has reported, independent of whether
+  // that scene counts as "changed" (see lastSignature below) — a title-only
+  // edit still needs *some* scene to save alongside it, even before the user
+  // has touched the canvas at all.
+  const sceneRef = useRef<DrawingScene | null>(null);
+  const [pendingSave, setPendingSave] = useState<{
+    title: string;
+    scene: DrawingScene;
+  } | null>(null);
   // Signature of the last scene Excalidraw reported that we accepted for
   // saving. Excalidraw's onChange also fires for selection/tool/scroll
   // changes and once on mount; comparing against this keeps those from
@@ -46,6 +62,8 @@ export function EditorPage() {
     getDrawing(id)
       .then((loaded) => {
         setDrawing(loaded);
+        setTitle(loaded.title);
+        sceneRef.current = loaded.scene;
         lastSignature.current = null;
         setInitialData({
           elements: loaded.scene.elements,
@@ -73,8 +91,9 @@ export function EditorPage() {
   // here would be a new reference on every render — confirmed by isolation
   // testing (a bare <Excalidraw /> with no props never crashes; adding this
   // component's props back is what triggers "Maximum update depth
-  // exceeded"). Empty deps array is safe: the body only calls
-  // `setPendingScene`, which React guarantees is a stable reference.
+  // exceeded"). Empty deps array is safe: the body only calls `setPendingSave`
+  // and reads `titleRef`/`sceneRef`, all of which React/refs guarantee stay
+  // stable references across renders.
   const handleChange = useCallback<NonNullable<ComponentProps<typeof Excalidraw>["onChange"]>>(
     (elements, appState, files) => {
       // Same opacity boundary as ExcalidrawInitialData above: Excalidraw's
@@ -87,25 +106,44 @@ export function EditorPage() {
         appState: appState as unknown as Record<string, unknown>,
         files,
       };
+      sceneRef.current = scene;
       const signature = sceneSignature(scene);
       const isBaseline = lastSignature.current === null;
       const unchanged = signature === lastSignature.current;
       lastSignature.current = signature;
       if (isBaseline || unchanged) return;
-      setPendingScene(scene);
+      setPendingSave({ title: titleRef.current, scene });
     },
     []
   );
 
-  const status = useAutosave(pendingScene, async (scene) => {
-    if (!id || !drawing || !scene) return;
+  const [status, saveNow] = useAutosave(pendingSave, async (pending) => {
+    if (!id || !drawing || !pending) return;
     const updated = await updateDrawing(id, {
-      title: drawing.title,
-      scene,
+      title: pending.title,
+      scene: pending.scene,
       version: drawing.version,
     });
     setDrawing(updated);
+    setTitle(updated.title);
   });
+
+  // Saves immediately rather than through the debounced `pendingSave` path
+  // above: a title commit (Enter/blur/clicking away) is already an explicit
+  // "done editing" signal, not a mid-stroke scene change, and debouncing it
+  // was a real bug — navigating away (e.g. clicking "← Drawings") unmounts
+  // the page before a 1.5s debounce timer ever fires, silently dropping the
+  // edit. Saving synchronously here means the request goes out as part of
+  // the same browser event that triggered the commit, before any
+  // navigation gets a chance to unmount this component.
+  const commitTitle = useCallback(
+    (newTitle: string) => {
+      setTitle(newTitle);
+      if (!sceneRef.current) return;
+      saveNow({ title: newTitle, scene: sceneRef.current });
+    },
+    [saveNow]
+  );
 
   if (!drawing || !initialData) {
     return (
@@ -116,9 +154,11 @@ export function EditorPage() {
   }
 
   return (
-    <div style={{ height: "100vh" }}>
-      <SaveStatus status={status} />
-      <Excalidraw initialData={initialData} onChange={handleChange} />
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <EditorToolbar title={title} onTitleCommit={commitTitle} status={status} />
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Excalidraw initialData={initialData} onChange={handleChange} />
+      </div>
     </div>
   );
 }
